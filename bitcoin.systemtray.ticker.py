@@ -1,47 +1,44 @@
 import requests
 import time
-from PIL import Image, ImageDraw
-from pystray import Icon, Menu, MenuItem
-from threading import Thread
+import tkinter as tk
 
 # Function to fetch Bitcoin price
 def get_bitcoin_price():
     try:
-        response = requests.get("https://api.coindesk.com/v1/bpi/currentprice.json")
+        response = requests.get("https://api.coindesk.com/v1/bpi/currentprice.json", timeout=5)
         data = response.json()
         return f"BTC: ${data['bpi']['USD']['rate']}"
-    except Exception:
-        return "Error fetching price"
+    except Exception as e:
+        return f"Error: {e}"
 
-# Function to update the tray icon title
-def update_icon(icon):
-    while icon.visible:
+# Function to update the price in the window
+def update_price():
+    try:
         price = get_bitcoin_price()
-        print(f"Updating tray: {price}")  # Debugging output
-        icon.title = price
-        time.sleep(60)  # Update every 60 seconds
+        print(f"Fetched price: {price}")  # Debugging output
+        label.config(text=price)
+    except Exception as e:
+        print(f"Error updating price: {e}")
+    finally:
+        root.after(60000, update_price)  # Update every 60 seconds
 
-# Function to create an icon image
-def create_image():
-    size = (64, 64)
-    image = Image.new("RGB", size, "white")
-    draw = ImageDraw.Draw(image)
-    draw.rectangle((0, 0, *size), fill="black")
-    return image
+# Create the GUI window
+root = tk.Tk()
+root.title("Bitcoin Price")
+root.geometry("300x100")
 
-# Function to quit the app
-def quit_app(icon, item):
-    icon.stop()
+label = tk.Label(root, text="Fetching price...", font=("Helvetica", 16))
+label.pack(pady=20)
 
-# Menu and icon setup
-menu = Menu(MenuItem("Quit", quit_app))
-icon = Icon("Bitcoin Price", create_image(), menu=menu)
+# Start updating the price
+update_price()
 
-# Thread to update the icon
-def setup(icon):
-    thread = Thread(target=update_icon, args=(icon,))
-    thread.start()
+# Run the app
+try:
+    print("Starting GUI...")
+    root.mainloop()
+except KeyboardInterrupt:
+    print("Script interrupted.")
 
-# Start the app
-icon.run(setup=setup)
+
 
