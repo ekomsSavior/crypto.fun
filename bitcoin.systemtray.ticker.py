@@ -10,13 +10,14 @@ def get_bitcoin_price():
         response = requests.get("https://api.coindesk.com/v1/bpi/currentprice.json")
         data = response.json()
         return f"BTC: ${data['bpi']['USD']['rate']}"
-    except Exception as e:
+    except Exception:
         return "Error fetching price"
 
 # Function to update the tray icon title
 def update_icon(icon):
     while icon.visible:
         price = get_bitcoin_price()
+        print(f"Updating tray: {price}")  # Debugging output
         icon.title = price
         time.sleep(60)  # Update every 60 seconds
 
@@ -36,7 +37,7 @@ def quit_app(icon, item):
 menu = Menu(MenuItem("Quit", quit_app))
 icon = Icon("Bitcoin Price", create_image(), menu=menu)
 
-# Thread for updating the icon
+# Thread to update the icon
 def setup(icon):
     thread = Thread(target=update_icon, args=(icon,))
     thread.start()
