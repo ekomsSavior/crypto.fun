@@ -2,6 +2,7 @@ import requests
 import time
 from PIL import Image, ImageDraw
 from pystray import Icon, Menu, MenuItem
+from threading import Thread
 
 # Function to fetch Bitcoin price
 def get_bitcoin_price():
@@ -35,5 +36,11 @@ def quit_app(icon, item):
 menu = Menu(MenuItem("Quit", quit_app))
 icon = Icon("Bitcoin Price", create_image(), menu=menu)
 
+# Thread for updating the icon
+def setup(icon):
+    thread = Thread(target=update_icon, args=(icon,))
+    thread.start()
+
 # Start the app
-icon.run(setup=lambda: update_icon(icon))
+icon.run(setup=setup)
+
