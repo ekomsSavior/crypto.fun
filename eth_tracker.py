@@ -1,19 +1,14 @@
 import requests
 import time
-import csv
-from datetime import datetime, timezone
 
-# 🔥 Replace with your API key
+# 🔥 Replace this with your Etherscan API Key
 API_KEY = "your_etherscan_api_key"
 
-# 🔥 Wallet address to track
+# 🔥 Replace this with the wallet you want to track
 WALLET_ADDRESS = "eth_wallet_address"
 
-# 🔥 Minimum ETH to filter transactions
+# 🔥 Minimum ETH value to filter transactions (Change this for different searches)
 MIN_ETH = 10  
-
-# 🔥 Date filter (YYYY-MM-DD)
-FILTER_DATE = "2025-02-21"  # CHANGE THIS IF NEEDED
 
 # Etherscan API URL
 url = f"https://api.etherscan.io/api?module=account&action=txlist&address={WALLET_ADDRESS}&startblock=0&endblock=99999999&sort=asc&apikey={API_KEY}"
@@ -26,29 +21,18 @@ def wei_to_ether(wei):
 response = requests.get(url)
 data = response.json()
 
-# 🔴 STEP 1: Print the raw response to see if it's working
-print("\n🔍 API RAW RESPONSE:\n", data, "\n")
-
 if data["status"] == "1":
-    with open("eth_transactions_filtered.csv", "w", newline="") as csvfile:
-        csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(["Timestamp", "From", "To", "Value (ETH)", "Transaction Hash", "Block Number"])  # CSV Headers
-
+    with open("eth_transactions_filtered.txt", "w") as f:
         print(f"🔍 Tracking Transactions for: {WALLET_ADDRESS}\n")
+        f.write(f"🔍 Tracking Transactions for: {WALLET_ADDRESS}\n\n")
 
-        found_transactions = False  # Track if we found any matching transactions
-
-        for tx in data["result"]:
+        for tx in data["result"]:  # No limit, pulls all transactions
             eth_value = wei_to_ether(tx['value'])
             
-            # ✅ Fixed timestamp conversion
-            tx_time = datetime.fromtimestamp(int(tx['timeStamp']), timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
-
-            # Filter transactions
-            if eth_value >= MIN_ETH and tx_time.startswith(FILTER_DATE):
-                found_transactions = True
+            # Filter: Only show transactions over MIN_ETH
+            if eth_value >= MIN_ETH:
                 output = (
-                    f"📅 Timestamp: {tx_time}\n"
+                    f"📅 Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(int(tx['timeStamp'])))}\n"
                     f"🔹 From: {tx['from']}\n"
                     f"🔹 To: {tx['to']}\n"
                     f"💰 Value: {eth_value} ETH\n"
@@ -57,14 +41,9 @@ if data["status"] == "1":
                     f"{'-' * 50}\n"
                 )
                 print(output)  # Print to terminal
-                
-                # Write to CSV
-                csvwriter.writerow([tx_time, tx['from'], tx['to'], eth_value, tx['hash'], tx['blockNumber']])
+                f.write(output)  # Save to file
 
-        if not found_transactions:
-            print("⚠️ No transactions met the filter criteria.")
-
-    print(f"\n✅ Transactions saved in 'eth_transactions_filtered.csv'!")
+    print(f"\n✅ Transactions saved in 'eth_transactions_filtered.txt'!")
 
 else:
-    print("❌ API Error:", data["message"])
+    print("❌ Error:", data["message"])
