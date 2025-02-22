@@ -1,7 +1,7 @@
 import requests
 import time
 import csv
-from datetime import datetime
+from datetime import datetime, timezone
 
 # 🔥 Replace with your Etherscan API Key
 API_KEY = "your_etherscan_api_key"
@@ -35,7 +35,9 @@ if data["status"] == "1":
 
         for tx in data["result"]:
             eth_value = wei_to_ether(tx['value'])
-            tx_time = datetime.utcfromtimestamp(int(tx['timeStamp'])).strftime('%Y-%m-%d %H:%M:%S')
+            
+            # ✅ Fixed timestamp conversion (No more warning!)
+            tx_time = datetime.fromtimestamp(int(tx['timeStamp']), timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
             # Filter: Only transactions over MIN_ETH & matching FILTER_DATE
             if eth_value >= MIN_ETH and tx_time.startswith(FILTER_DATE):
