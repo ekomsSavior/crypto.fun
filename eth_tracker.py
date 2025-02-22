@@ -3,17 +3,17 @@ import time
 import csv
 from datetime import datetime, timezone
 
-# 🔥 Replace with your Etherscan API Key
+# 🔥 Replace with your API key
 API_KEY = "your_etherscan_api_key"
 
-# 🔥 Replace with the wallet address you want to track
-WALLET_ADDRESS = "0x1Db92e2EeBC8E0c075a02BeA49a2935BcD2dFCF4"
+# 🔥 Wallet address to track
+WALLET_ADDRESS = "eth_wallet_address"
 
-# 🔥 Minimum ETH value to filter transactions
+# 🔥 Minimum ETH to filter transactions
 MIN_ETH = 10  
 
-# 🔥 Date filter: Only show transactions from this date (format: YYYY-MM-DD)
-FILTER_DATE = "2025-02-21"  # CHANGE THIS TO YOUR DESIRED DATE
+# 🔥 Date filter (YYYY-MM-DD)
+FILTER_DATE = "2025-02-21"  # CHANGE THIS IF NEEDED
 
 # Etherscan API URL
 url = f"https://api.etherscan.io/api?module=account&action=txlist&address={WALLET_ADDRESS}&startblock=0&endblock=99999999&sort=asc&apikey={API_KEY}"
@@ -26,6 +26,9 @@ def wei_to_ether(wei):
 response = requests.get(url)
 data = response.json()
 
+# 🔴 STEP 1: Print the raw response to see if it's working
+print("\n🔍 API RAW RESPONSE:\n", data, "\n")
+
 if data["status"] == "1":
     with open("eth_transactions_filtered.csv", "w", newline="") as csvfile:
         csvwriter = csv.writer(csvfile)
@@ -33,14 +36,17 @@ if data["status"] == "1":
 
         print(f"🔍 Tracking Transactions for: {WALLET_ADDRESS}\n")
 
+        found_transactions = False  # Track if we found any matching transactions
+
         for tx in data["result"]:
             eth_value = wei_to_ether(tx['value'])
             
-            # ✅ Fixed timestamp conversion (No more warning!)
+            # ✅ Fixed timestamp conversion
             tx_time = datetime.fromtimestamp(int(tx['timeStamp']), timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
-            # Filter: Only transactions over MIN_ETH & matching FILTER_DATE
+            # Filter transactions
             if eth_value >= MIN_ETH and tx_time.startswith(FILTER_DATE):
+                found_transactions = True
                 output = (
                     f"📅 Timestamp: {tx_time}\n"
                     f"🔹 From: {tx['from']}\n"
@@ -55,7 +61,10 @@ if data["status"] == "1":
                 # Write to CSV
                 csvwriter.writerow([tx_time, tx['from'], tx['to'], eth_value, tx['hash'], tx['blockNumber']])
 
+        if not found_transactions:
+            print("⚠️ No transactions met the filter criteria.")
+
     print(f"\n✅ Transactions saved in 'eth_transactions_filtered.csv'!")
 
 else:
-    print("❌ Error:", data["message"])
+    print("❌ API Error:", data["message"])
