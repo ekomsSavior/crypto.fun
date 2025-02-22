@@ -8,7 +8,10 @@ API_KEY = "your_etherscan_api_key"
 WALLET_ADDRESS = "eth_wallet_address"
 
 # 🔥 Minimum ETH value to filter transactions (Change this for different searches)
-MIN_ETH = 10  
+MIN_ETH = 10
+
+# 🔥 Maximum ETH value to filter transactions (Change this for different searches)
+MAX_ETH = 100
 
 # Etherscan API URL
 url = f"https://api.etherscan.io/api?module=account&action=txlist&address={WALLET_ADDRESS}&startblock=0&endblock=99999999&sort=asc&apikey={API_KEY}"
