@@ -43,7 +43,5 @@ if data["status"] == "1":
                 print(output)  # Print to terminal
                 f.write(output)  # Save to file
 
-    print(f"\n✅ Transactions saved in 'eth_transactions_filtered.txt'!")
-
 else:
     print("❌ Error:", data["message"])
